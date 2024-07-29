@@ -20,7 +20,21 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping(value="/ocr")
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class OcrController {
-	
 
+    @Autowired
+    private OcrService ocrService;
+
+    @Operation(summary = "身份证识别")
+    @PostMapping("/idCardOcr")
+    public Result<IdCardOcrVo> idCardOcr(@RequestPart("file") MultipartFile file){
+        IdCardOcrVo idCardOcrVo = ocrService.idCardOcr(file);
+        return Result.ok(idCardOcrVo);
+    }
+
+    @Operation(summary = "驾驶证识别")
+    @PostMapping("/driverLicenseOcr")
+    public Result<DriverLicenseOcrVo> driverLicenseOcr(@RequestPart("file") MultipartFile file) {
+        return Result.ok(ocrService.driverLicenseOcr(file));
+    }
 }
 
