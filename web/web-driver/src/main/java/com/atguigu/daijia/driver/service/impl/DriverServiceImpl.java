@@ -4,6 +4,7 @@ import com.atguigu.daijia.common.constant.RedisConstant;
 import com.atguigu.daijia.common.result.Result;
 import com.atguigu.daijia.driver.client.DriverInfoFeignClient;
 import com.atguigu.daijia.driver.service.DriverService;
+import com.atguigu.daijia.model.vo.driver.DriverAuthInfoVo;
 import com.atguigu.daijia.model.vo.driver.DriverLoginVo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,10 +46,17 @@ public class DriverServiceImpl implements DriverService {
         return token;
     }
 
+    //获取司机登录信息
     @Override
     public Result<DriverLoginVo> getDriverLoginInfo(Long driverId) {
         return client.getDriverInfo(driverId);
     }
 
-
+    //司机认证信息
+    @Override
+    public DriverAuthInfoVo getDriverAuthInfo(Long driverId) {
+        Result<DriverAuthInfoVo> authInfoVoResult = client.getDriverAuthInfo(driverId);
+        DriverAuthInfoVo driverAuthInfoVo = authInfoVoResult.getData();
+        return driverAuthInfoVo;
+    }
 }

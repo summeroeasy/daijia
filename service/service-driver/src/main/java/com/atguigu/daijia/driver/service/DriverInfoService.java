@@ -1,6 +1,7 @@
 package com.atguigu.daijia.driver.service;
 
 import com.atguigu.daijia.model.entity.driver.DriverInfo;
+import com.atguigu.daijia.model.vo.driver.DriverAuthInfoVo;
 import com.atguigu.daijia.model.vo.driver.DriverLoginVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -14,9 +15,16 @@ public interface DriverInfoService extends IService<DriverInfo> {
     Long login(String code);
 
     /**
-     * 获取司机登录信息
+     * 获取代驾登录信息
      * @param driverId 司机id
      * @return 司机登录信息
      */
     DriverLoginVo getDriverInfo(Long driverId);
+
+    /**
+     * 获取代驾验证信息
+     * @param driverId
+     * @return
+     */
+    DriverAuthInfoVo getDriverAuthInfo(Long driverId);
 }
