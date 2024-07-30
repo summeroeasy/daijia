@@ -4,6 +4,7 @@ import com.atguigu.daijia.common.constant.RedisConstant;
 import com.atguigu.daijia.common.result.Result;
 import com.atguigu.daijia.driver.client.DriverInfoFeignClient;
 import com.atguigu.daijia.driver.service.DriverService;
+import com.atguigu.daijia.model.form.driver.UpdateDriverAuthInfoForm;
 import com.atguigu.daijia.model.vo.driver.DriverAuthInfoVo;
 import com.atguigu.daijia.model.vo.driver.DriverLoginVo;
 import lombok.extern.slf4j.Slf4j;
@@ -58,5 +59,13 @@ public class DriverServiceImpl implements DriverService {
         Result<DriverAuthInfoVo> authInfoVoResult = client.getDriverAuthInfo(driverId);
         DriverAuthInfoVo driverAuthInfoVo = authInfoVoResult.getData();
         return driverAuthInfoVo;
+    }
+
+    //更新司机认证信息
+    @Override
+    public Boolean updateDriverAuthInfo(UpdateDriverAuthInfoForm updateDriverAuthInfoForm) {
+        Result<Boolean> booleanResult = client.UpdateDriverAuthInfo(updateDriverAuthInfoForm);
+        Boolean data = booleanResult.getData();
+        return data;
     }
 }
