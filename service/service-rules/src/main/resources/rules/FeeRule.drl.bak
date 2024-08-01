@@ -21,9 +21,7 @@ rule "起步价 00:00:00-06:59:59  19元(含3公里)"
         $rule是绑定变量名，可以任意命名，官方推荐$符号，定义了绑定变量名，可以在then部分操作fact对象*/
         $rule:FeeRuleRequest(startTime >= "00:00:00" && startTime <= "06:59:59")
     then
-        //基础里程
         feeRuleResponse.setBaseDistance(new BigDecimal("3.0"));
-        //收费19
         feeRuleResponse.setBaseDistanceFee(new BigDecimal("19.0"));
         //3公里内里程费为0
         feeRuleResponse.setExceedDistance(new BigDecimal("0.0"));

@@ -25,7 +25,7 @@ public class MapServiceImpl implements MapService {
     @Autowired
     private RestTemplate restTemplate;
 
-    @Value("tencent.cloud.map")
+    @Value("${tencent.map.key}")
     private String key;
 
     /**
@@ -51,8 +51,9 @@ public class MapServiceImpl implements MapService {
         JSONObject result = restTemplate.getForObject(url, JSONObject.class, map);
         //处理返回结果
         int status = result.getIntValue("status");
+        System.out.println(result.getString("message"));
         if (status != 0) {
-            throw new GuiguException(ResultCodeEnum.MAP_FAIL);
+            throw new RuntimeException();
         }
         //获取返回路线信息
         JSONObject routes = result.getJSONObject("result").getJSONArray("routes").getJSONObject(0);

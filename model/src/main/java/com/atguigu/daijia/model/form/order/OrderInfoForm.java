@@ -40,7 +40,6 @@ public class OrderInfoForm {
     @Schema(description = "订单备注信息")
 	private String remark;
 
-
     //预期费用信息
     @Schema(description = "预估订单费用")
     private BigDecimal expectAmount;
