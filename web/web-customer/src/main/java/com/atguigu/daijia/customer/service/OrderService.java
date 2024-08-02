@@ -19,4 +19,11 @@ public interface OrderService {
      * @return
      */
     Long submitOrder(SubmitOrderForm submitOrderForm);
+
+    /**
+     * 查询订单状态
+     * @param orderId
+     * @return
+     */
+    Integer getOrderStatus(Long orderId);
 }

@@ -12,4 +12,11 @@ public interface OrderInfoService extends IService<OrderInfo> {
      * @return
      */
     Long saveOrderInfo(OrderInfoForm orderInfoForm);
+
+    /**
+     * 根据订单id获取订单状态
+     * @param orderId
+     * @return
+     */
+    Integer getOrderStatus(Long orderId);
 }

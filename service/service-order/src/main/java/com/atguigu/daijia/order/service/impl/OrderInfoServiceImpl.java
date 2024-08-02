@@ -7,6 +7,7 @@ import com.atguigu.daijia.model.form.order.OrderInfoForm;
 import com.atguigu.daijia.order.mapper.OrderInfoMapper;
 import com.atguigu.daijia.order.mapper.OrderStatusLogMapper;
 import com.atguigu.daijia.order.service.OrderInfoService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +49,24 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         this.log(orderInfo.getId(), OrderStatus.WAITING_ACCEPT.getStatus());
         // TODO 接单标识，标识不存在了说明不在等待接单状态了
         return orderInfo.getId();
+    }
+
+    /**
+     * 根据订单id获取订单状态
+     * @param orderId
+     * @return
+     */
+    @Override
+    public Integer getOrderStatus(Long orderId) {
+//        OrderInfo orderInfo = orderInfoMapper.selectById(orderId);
+//        return orderInfo.getStatus();
+        LambdaQueryWrapper<OrderInfo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(OrderInfo::getId, orderId);
+        OrderInfo orderInfo = orderInfoMapper.selectOne(wrapper);
+        if (orderInfo == null){
+            return OrderStatus.NULL_ORDER.getStatus();
+        }
+        return orderInfo.getStatus();
     }
 
     /**
