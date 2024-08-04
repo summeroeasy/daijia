@@ -1,5 +1,9 @@
 package com.atguigu.daijia.driver.service;
 
+import com.atguigu.daijia.model.vo.order.NewOrderDataVo;
+
+import java.util.List;
+
 public interface OrderService {
 
 
@@ -9,4 +13,11 @@ public interface OrderService {
      * @return
      */
     Integer getOrderStatus(Long orderId);
+
+    /**
+     * 查询司机新订单数据
+     * @param driverId 司机id
+     * @return 新订单数据
+     */
+    List<NewOrderDataVo> findNewOrderQueueData(Long driverId);
 }
