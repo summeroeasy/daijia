@@ -47,4 +47,11 @@ public interface DriverInfoService extends IService<DriverInfo> {
      * @return
      */
     DriverSet getDriverSet(Long driverId);
+
+    /**
+     * 判断司机当日是否进行过人脸识别
+     * @param driverId 司机id
+     * @return true:是 false:否
+     */
+    Boolean isFaceRecognition(Long driverId);
 }

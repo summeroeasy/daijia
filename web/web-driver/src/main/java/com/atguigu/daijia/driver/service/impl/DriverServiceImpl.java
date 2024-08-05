@@ -8,6 +8,7 @@ import com.atguigu.daijia.model.form.driver.DriverFaceModelForm;
 import com.atguigu.daijia.model.form.driver.UpdateDriverAuthInfoForm;
 import com.atguigu.daijia.model.vo.driver.DriverAuthInfoVo;
 import com.atguigu.daijia.model.vo.driver.DriverLoginVo;
+import com.atguigu.daijia.order.client.OrderInfoFeignClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -26,6 +27,9 @@ public class DriverServiceImpl implements DriverService {
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private OrderInfoFeignClient orderInfoFeignClient;
 
     /**
      * 小程序授权登录
@@ -75,5 +79,15 @@ public class DriverServiceImpl implements DriverService {
     public Boolean creatDriverFaceModel(DriverFaceModelForm driverFaceModelForm) {
         Result<Boolean> booleanResult = client.creatDriverFaceModel(driverFaceModelForm);
         return booleanResult.getData();
+    }
+
+    /**
+     * 判断司机当日是否进行过人脸识别
+     * @param driverId 司机id
+     * @return true 已进行过人脸识别，false 未进行过人脸识别
+     */
+    @Override
+    public Boolean isFaceRecognition(Long driverId) {
+        return orderInfoFeignClient.isFaceRecognition(driverId).getData();
     }
 }
