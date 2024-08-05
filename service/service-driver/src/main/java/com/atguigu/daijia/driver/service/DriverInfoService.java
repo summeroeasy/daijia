@@ -61,4 +61,12 @@ public interface DriverInfoService extends IService<DriverInfo> {
      * @return true:是 false:否
      */
     Boolean verifyDriverFace(DriverFaceModelForm driverFaceModelForm);
+
+    /**
+     * 更新代驾服务状态
+     * @param driverId 司机id
+     * @param status 司机状态
+     * @return true:成功 false:失败
+     */
+    Boolean updateServiceStatus(Long driverId, Integer status);
 }
