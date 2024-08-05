@@ -151,7 +151,7 @@ public class NewOrderServiceImpl implements NewOrderService {
      * @return 新订单数据
      */
     @Override
-    public List<NewOrderDataVo> findNewOrderQueueData(Long driverId) {\
+    public List<NewOrderDataVo> findNewOrderQueueData(Long driverId) {
         List<NewOrderDataVo> list = new ArrayList<>();
         String key = RedisConstant.DRIVER_ORDER_TEMP_LIST + driverId;
         Long size = redisTemplate.opsForList().size(key);
