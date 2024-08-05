@@ -45,4 +45,11 @@ public interface DriverService {
      * @return true 已进行过人脸识别，false 未进行过人脸识别
      */
     Boolean isFaceRecognition(Long driverId);
+
+    /**
+     * 验证司机人脸
+     * @param driverFaceModelForm 司机调用人脸识别接口传入的参数
+     * @return true 验证成功，false 验证失败
+     */
+    Boolean verifyDriverFace(DriverFaceModelForm driverFaceModelForm);
 }
