@@ -22,4 +22,7 @@ public interface OrderInfoService extends IService<OrderInfo> {
 
     // 司机抢单
     Boolean robNewOrder(Long driverId, Long orderId);
+
+    //基于乐观锁的司机抢单
+    Boolean robNewOrderOptimistic(Long driverId, Long orderId);
 }

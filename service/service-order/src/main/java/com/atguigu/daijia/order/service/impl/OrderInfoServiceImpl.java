@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @SuppressWarnings({"unchecked", "rawtypes"})
@@ -37,8 +38,8 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     /**
      * 保存订单信息
      *
-     * @param orderInfoForm
-     * @return
+     * @param orderInfoForm 订单信息
+     * @return 订单id
      */
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -46,13 +47,27 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         System.out.println(orderInfoForm.toString());
         OrderInfo orderInfo = new OrderInfo();
         BeanUtils.copyProperties(orderInfoForm, orderInfo);
+
         //订单号
         String orderNo = UUID.randomUUID().toString().replaceAll("-", "");
         orderInfo.setOrderNo(orderNo);
+
+        //订单状态
         orderInfo.setStatus(OrderStatus.WAITING_ACCEPT.getStatus());
         orderInfoMapper.insert(orderInfo);
+
+        //记录日志
         this.log(orderInfo.getId(), OrderStatus.WAITING_ACCEPT.getStatus());
-        // TODO 接单标识，标识不存在了说明不在等待接单状态了
+
+
+        //向Redis中添加接单标识，标识不存在了说明不在等待接单状态了
+        redisTemplate
+                .opsForValue()
+                .set(RedisConstant.ORDER_ACCEPT_MARK,
+                        "0",
+                        RedisConstant.ORDER_ACCEPT_MARK_EXPIRES_TIME,
+                        TimeUnit.MINUTES);
+
         return orderInfo.getId();
     }
 
@@ -101,7 +116,12 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         //修改字段
         //update order_info set status = 2, driver_id = #{driverId}, accept_time = now() where id = #{id}
         //进行条件封装
-        OrderInfo orderInfo = new OrderInfo();
+        LambdaQueryWrapper<OrderInfo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(OrderInfo::getId, orderId);
+        //指定版本号
+        wrapper.eq(OrderInfo::getStatus, OrderStatus.WAITING_ACCEPT.getStatus());
+        OrderInfo orderInfo = orderInfoMapper.selectOne(wrapper);
+        //进行数值填充
         orderInfo.setId(driverId);
         orderInfo.setStatus(OrderStatus.ACCEPTED.getStatus());
         orderInfo.setDriverId(driverId);
@@ -112,7 +132,40 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
             throw new GuiguException(ResultCodeEnum.COB_NEW_ORDER_FAIL);
         }
         //记录日志
-        this.log(orderId,orderInfo.getStatus());
+        this.log(orderId, orderInfo.getStatus());
+
+        //删除redis订单标识
+        redisTemplate.delete(RedisConstant.ORDER_ACCEPT_MARK);
+        return true;
+    }
+
+    // 司机抢单
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public Boolean robNewOrderOptimistic(Long driverId, Long orderId) {
+        //抢单成功或取消订单，都会删除该key，redis判断，减少数据库压力
+        if (!redisTemplate.hasKey(RedisConstant.ORDER_ACCEPT_MARK)) {
+            //抢单失败失败
+            throw new GuiguException(ResultCodeEnum.COB_NEW_ORDER_FAIL);
+        }
+        //修改字段
+        //update order_info set status = 2, driver_id = #{driverId}, accept_time = now() where id = #{id}
+        //进行条件封装
+        LambdaQueryWrapper<OrderInfo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(OrderInfo::getId, orderId);
+        OrderInfo orderInfo = orderInfoMapper.selectOne(wrapper);
+        //进行数值填充
+        orderInfo.setId(driverId);
+        orderInfo.setStatus(OrderStatus.ACCEPTED.getStatus());
+        orderInfo.setDriverId(driverId);
+        orderInfo.setAcceptTime(new Date());
+        int rows = orderInfoMapper.updateById(orderInfo);
+        if (rows != 1) {
+            //抢单失败
+            throw new GuiguException(ResultCodeEnum.COB_NEW_ORDER_FAIL);
+        }
+        //记录日志
+        this.log(orderId, orderInfo.getStatus());
 
         //删除redis订单标识
         redisTemplate.delete(RedisConstant.ORDER_ACCEPT_MARK);

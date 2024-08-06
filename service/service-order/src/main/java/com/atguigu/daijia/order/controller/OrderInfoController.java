@@ -33,7 +33,9 @@ public class OrderInfoController {
     @Operation(summary = "司机抢单")
     @GetMapping("/robNewOrder/{driverId}/{orderId}")
     public Result<Boolean> robNewOrder(@PathVariable Long driverId, @PathVariable Long orderId) {
-        return Result.ok(orderInfoService.robNewOrder(driverId, orderId));
+        //return Result.ok(orderInfoService.robNewOrder(driverId, orderId));
+        //调用乐观锁
+        return Result.ok(orderInfoService.robNewOrderOptimistic(driverId, orderId));
     }
 }
 
