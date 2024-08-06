@@ -45,6 +45,7 @@ public class OrderController {
     @GuiguLogin
     @PostMapping("/submitOrder")
     public Result<Long> submitOrder(@RequestBody SubmitOrderForm submitOrderForm) {
+        log.info("乘客下单：{}", submitOrderForm.toString());
         submitOrderForm.setCustomerId(AuthContextHolder.getUserId());
         return Result.ok(orderService.submitOrder(submitOrderForm));
     }

@@ -28,11 +28,7 @@ public interface OrderInfoFeignClient {
     @GetMapping("/order/info/getOrderStatus/{orderId}")
     Result<Integer> getOrderStatus(@PathVariable("orderId") Long orderId);
 
-    /**
-     * 判断司机当日是否进行过人脸识别
-     * @param driverId
-     * @return
-     */
-    @GetMapping("/driver/info/isFaceRecognition/{driverId}")
-    Result<Boolean> isFaceRecognition(@PathVariable("driverId") Long driverId);
+
+
+
 }

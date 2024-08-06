@@ -11,14 +11,11 @@ import com.atguigu.daijia.model.vo.map.NearByDriverVo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.*;
-
-import org.springframework.data.geo.Point;
 import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.awt.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -76,6 +73,9 @@ public class LocationServiceImpl implements LocationService {
         Point point = new Point(searchNearByDriverForm.getLongitude().doubleValue(),
                 searchNearByDriverForm.getLatitude().doubleValue());
         //定义距离 5公里
+//        //TODO 强行修改为200公里以内的订单
+//        Distance distance = new Distance(200,
+//                RedisGeoCommands.DistanceUnit.KILOMETERS);
         Distance distance = new Distance(SystemConstant.NEARBY_DRIVER_RADIUS,
                 RedisGeoCommands.DistanceUnit.KILOMETERS);
         //创建circle对象

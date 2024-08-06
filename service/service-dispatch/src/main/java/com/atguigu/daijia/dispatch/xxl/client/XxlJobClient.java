@@ -131,6 +131,7 @@ public class XxlJobClient {
         xxlJobInfo.setMisfireStrategy("FIRE_ONCE_NOW");
         xxlJobInfo.setExecutorTimeout(0);
         xxlJobInfo.setExecutorFailRetryCount(0);
+        System.out.println("==============xxlJobInfo: " + xxlJobInfo.toString() + "==============");
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -138,12 +139,21 @@ public class XxlJobClient {
 
         String url = xxlJobClientConfig.getAddAndStartUrl();
         ResponseEntity<JSONObject> response = restTemplate.postForEntity(url, request, JSONObject.class);
-        if(response.getStatusCode().value() == 200 && response.getBody().getIntValue("code") == 200) {
-            log.info("增加并开始执行xxl任务成功,返回信息:{}", response.getBody().toJSONString());
-            //content为任务id
-            return response.getBody().getLong("content");
+        System.out.println("==============response: " + response.toString() + "==============");
+        JSONObject responseBody = response.getBody();
+        if (responseBody != null && responseBody.containsKey("content") && responseBody.get("content") != null) {
+            return responseBody.getLong("content");
+        } else {
+            log.info("content 键不存在或为null");
+            throw new RuntimeException("content 键不存在或为null");
         }
-        log.info("增加并开始执行xxl任务失败:{}", response.getBody().toJSONString());
-        throw new GuiguException(ResultCodeEnum.DATA_ERROR);
+
+//        if(response.getStatusCode().value() == 200 && response.getBody().getIntValue("code") == 200) {
+//            log.info("增加并开始执行xxl任务成功,返回信息:{}", response.getBody().toJSONString());
+//            //content为任务id
+//            return response.getBody().getLong("content");
+//        }
+//        log.info("增加并开始执行xxl任务失败:{}", response.getBody().toJSONString());
+//        throw new RuntimeException();
     }
 }

@@ -52,4 +52,14 @@ public interface DriverService {
      * @return true 验证成功，false 验证失败
      */
     Boolean verifyDriverFace(DriverFaceModelForm driverFaceModelForm);
+
+    /**
+     * 开启代驾服务
+     * @param driverId 司机id
+     * @return
+     */
+    Boolean startService(Long driverId);
+
+    //停止代驾服务
+    Boolean stopService(Long driverId);
 }

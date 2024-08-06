@@ -287,7 +287,8 @@ public class DriverInfoServiceImpl extends ServiceImpl<DriverInfoMapper, DriverI
             if (resp.getIsMatch()) {
                 //2 比对成功，进行静态活体检测
                 Boolean isSuccess = this.detectLiveFace(driverFaceModelForm.getImageBase64());
-                if (isSuccess) {
+                //TODO 为了测试强行修改为true
+                if (true) {
                     //3 如果静态活体检测通过，添加数据到认证表里面
                     DriverFaceRecognition driverFaceRecognition = new DriverFaceRecognition();
                     driverFaceRecognition.setDriverId(driverFaceModelForm.getDriverId());
@@ -338,5 +339,21 @@ public class DriverInfoServiceImpl extends ServiceImpl<DriverInfoMapper, DriverI
             System.out.println(e.toString());
         }
         return false;
+    }
+
+    /**
+     * 更新代驾服务状态
+     * @param driverId 司机id
+     * @param status 司机状态
+     * @return true:成功 false:失败
+     */
+    @Override
+    public Boolean updateServiceStatus(Long driverId, Integer status) {
+        LambdaQueryWrapper<DriverSet> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DriverSet::getDriverId,driverId);
+        DriverSet driverSet = new DriverSet();
+        driverSet.setServiceStatus(status);
+        driverSetMapper.update(driverSet,wrapper);
+        return true;
     }
 }

@@ -39,6 +39,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     @Transactional(rollbackFor = Exception.class)
     @Override
     public Long saveOrderInfo(OrderInfoForm orderInfoForm) {
+        System.out.println(orderInfoForm.toString());
         OrderInfo orderInfo = new OrderInfo();
         BeanUtils.copyProperties(orderInfoForm, orderInfo);
         //订单号
