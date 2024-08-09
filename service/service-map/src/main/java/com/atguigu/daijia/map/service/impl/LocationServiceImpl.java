@@ -40,7 +40,7 @@ public class LocationServiceImpl implements LocationService {
      */
     @Override
     public Boolean updateDriverLocation(UpdateDriverLocationForm updateDriverLocationForm) {
-        //TODO 把司机位置添加到redis里面geo
+
         Point point = new Point(updateDriverLocationForm.getLongitude().doubleValue(),
                 updateDriverLocationForm.getLatitude().doubleValue());
         redisTemplate.opsForGeo().add(RedisConstant.DRIVER_GEO_LOCATION, point, updateDriverLocationForm.getDriverId().toString());
@@ -73,7 +73,7 @@ public class LocationServiceImpl implements LocationService {
         Point point = new Point(searchNearByDriverForm.getLongitude().doubleValue(),
                 searchNearByDriverForm.getLatitude().doubleValue());
         //定义距离 5公里
-//        //TODO 强行修改为200公里以内的订单
+
 //        Distance distance = new Distance(200,
 //                RedisGeoCommands.DistanceUnit.KILOMETERS);
         Distance distance = new Distance(SystemConstant.NEARBY_DRIVER_RADIUS,

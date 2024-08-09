@@ -53,7 +53,7 @@ public class DriverServiceImpl implements DriverService {
     @Override
     public String login(String code) {
         Result<Long> longResult = client.login(code);
-        //TODO 判断
+
         Long driverId = longResult.getData();
         //token字符串
         String token = UUID.randomUUID().toString().replaceAll("-", "");
