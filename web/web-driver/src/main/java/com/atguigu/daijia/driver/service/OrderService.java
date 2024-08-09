@@ -1,5 +1,7 @@
 package com.atguigu.daijia.driver.service;
 
+import com.atguigu.daijia.model.form.map.CalculateDrivingLineForm;
+import com.atguigu.daijia.model.vo.map.DrivingLineVo;
 import com.atguigu.daijia.model.vo.order.CurrentOrderInfoVo;
 import com.atguigu.daijia.model.vo.order.NewOrderDataVo;
 import com.atguigu.daijia.model.vo.order.OrderInfoVo;
@@ -31,4 +33,7 @@ public interface OrderService {
 
     //司机端获取订单信息
     OrderInfoVo getOrderInfo(Long orderId, Long driverId);
+
+    //计算司机最佳行驶路线
+    DrivingLineVo calculateDrivingLine(CalculateDrivingLineForm calculateDrivingLineForm);
 }
