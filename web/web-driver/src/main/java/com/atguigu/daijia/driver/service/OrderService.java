@@ -2,6 +2,7 @@ package com.atguigu.daijia.driver.service;
 
 import com.atguigu.daijia.model.vo.order.CurrentOrderInfoVo;
 import com.atguigu.daijia.model.vo.order.NewOrderDataVo;
+import com.atguigu.daijia.model.vo.order.OrderInfoVo;
 
 import java.util.List;
 
@@ -27,4 +28,7 @@ public interface OrderService {
 
     //查找司机端当前订单
     CurrentOrderInfoVo searchDriverCurrentOrder(Long driverId);
+
+    //司机端获取订单信息
+    OrderInfoVo getOrderInfo(Long orderId, Long driverId);
 }

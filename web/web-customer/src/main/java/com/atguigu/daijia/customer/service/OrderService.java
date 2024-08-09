@@ -4,6 +4,7 @@ import com.atguigu.daijia.model.form.customer.ExpectOrderForm;
 import com.atguigu.daijia.model.form.customer.SubmitOrderForm;
 import com.atguigu.daijia.model.vo.customer.ExpectOrderVo;
 import com.atguigu.daijia.model.vo.order.CurrentOrderInfoVo;
+import com.atguigu.daijia.model.vo.order.OrderInfoVo;
 
 public interface OrderService {
 
@@ -34,4 +35,7 @@ public interface OrderService {
      * @return
      */
     CurrentOrderInfoVo searchCustomerCurrentOrder(Long customerId);
+
+    // 查询订单信息
+    OrderInfoVo getOrderInfo(Long orderId, Long customerId);
 }
