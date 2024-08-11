@@ -141,6 +141,7 @@ public class LocationServiceImpl implements LocationService {
         OrderLocationVo orderLocationVo = new OrderLocationVo();
         orderLocationVo.setLatitude(updateOrderLocationForm.getLatitude());
         orderLocationVo.setLongitude(updateOrderLocationForm.getLongitude());
+
         redisTemplate.opsForValue().set(RedisConstant.UPDATE_ORDER_LOCATION + updateOrderLocationForm.getOrderId(),
                 orderLocationVo);
         return true;

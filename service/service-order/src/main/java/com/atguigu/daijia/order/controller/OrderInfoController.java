@@ -20,6 +20,7 @@ public class OrderInfoController {
     @Autowired
     private OrderInfoService orderInfoService;
 
+
     @Operation(summary = "保存订单信息")
     @PostMapping("/saveOrderInfo")
     public Result<Long> saveOrderInfo(@RequestBody OrderInfoForm orderInfoForm) {
@@ -57,5 +58,7 @@ public class OrderInfoController {
     public Result<OrderInfo> getOrderInfo(@PathVariable Long orderId) {
         return Result.ok(orderInfoService.getById(orderId));
     }
+
+
 }
 
