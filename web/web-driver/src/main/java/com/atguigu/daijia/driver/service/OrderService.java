@@ -36,4 +36,7 @@ public interface OrderService {
 
     //计算司机最佳行驶路线
     DrivingLineVo calculateDrivingLine(CalculateDrivingLineForm calculateDrivingLineForm);
+
+    //司机到达代驾起始点
+    Boolean driverArriveStartLocation(Long orderId, Long driverId);
 }
