@@ -146,4 +146,10 @@ public class LocationServiceImpl implements LocationService {
                 orderLocationVo);
         return true;
     }
+
+    //从redis缓存当中获取订单中司机位置
+    @Override
+    public OrderLocationVo getCacheOrderLocation(Long orderId) {
+        return (OrderLocationVo) redisTemplate.opsForValue().get(RedisConstant.UPDATE_ORDER_LOCATION + orderId);
+    }
 }

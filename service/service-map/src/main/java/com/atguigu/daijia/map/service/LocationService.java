@@ -4,6 +4,7 @@ import com.atguigu.daijia.model.form.map.SearchNearByDriverForm;
 import com.atguigu.daijia.model.form.map.UpdateDriverLocationForm;
 import com.atguigu.daijia.model.form.map.UpdateOrderLocationForm;
 import com.atguigu.daijia.model.vo.map.NearByDriverVo;
+import com.atguigu.daijia.model.vo.map.OrderLocationVo;
 
 import java.util.List;
 
@@ -32,4 +33,7 @@ public interface LocationService {
 
     //更新司机位置到redis缓存当中
     Boolean updateOrderLocationToCache(UpdateOrderLocationForm updateOrderLocationForm);
+
+    //从redis缓存当中获取订单中司机位置
+    OrderLocationVo getCacheOrderLocation(Long orderId);
 }
