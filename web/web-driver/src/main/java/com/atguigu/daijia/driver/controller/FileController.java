@@ -21,10 +21,11 @@ public class FileController {
     @Operation(summary = "上传")
     //@GuiguLogin
     @PostMapping("/upload")
-    public Result<CosUploadVo> upload(@RequestPart("file") MultipartFile file,
+    public Result<String> upload(@RequestPart("file") MultipartFile file,
                                       @RequestParam(name = "path",defaultValue = "auth") String path) {
         CosUploadVo cosUploadVo = cosService.uploadFile(file,path);
-        return Result.ok(cosUploadVo);
+        String showUrl = cosUploadVo.getShowUrl();
+        return Result.ok(showUrl);
     }
 
 }

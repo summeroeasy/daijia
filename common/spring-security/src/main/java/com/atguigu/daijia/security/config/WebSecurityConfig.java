@@ -66,7 +66,7 @@ public class WebSecurityConfig {
                 // 设置白名单
                 .authorizeHttpRequests()
                 //swg相关
-                .requestMatchers("/favicon.ico","/swagger-resources/**", "/webjars/**", "/v3/**", "/doc.html").permitAll()
+                .requestMatchers("/favicon.ico", "/swagger-resources/**", "/webjars/**", "/v3/**", "/doc.html").permitAll()
                 //用户登录相关接口
                 .requestMatchers("/securityLogin/login").permitAll()
                 // 对于其他任何请求，都保护起来
@@ -78,12 +78,11 @@ public class WebSecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 // 添加身份验证
                 .and()
-                // TODO 添加身份验证1
+                //
                 .authenticationProvider(authenticationProvider())
                 // 添加token过滤器
                 .addFilterBefore(new TokenAuthenticationFilter(redisTemplate), UsernamePasswordAuthenticationFilter.class)
-                .addFilter(new TokenLoginFilter(authenticationManager(authenticationConfiguration), redisTemplate, sysLoginLogFeignClient))
-                ;
+                .addFilter(new TokenLoginFilter(authenticationManager(authenticationConfiguration), redisTemplate, sysLoginLogFeignClient));
 
 
         return http.build();

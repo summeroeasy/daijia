@@ -7,6 +7,8 @@ import com.atguigu.daijia.driver.service.OrderService;
 import com.atguigu.daijia.map.client.MapFeignClient;
 import com.atguigu.daijia.model.entity.order.OrderInfo;
 import com.atguigu.daijia.model.form.map.CalculateDrivingLineForm;
+import com.atguigu.daijia.model.form.order.StartDriveForm;
+import com.atguigu.daijia.model.form.order.UpdateOrderCartForm;
 import com.atguigu.daijia.model.vo.map.DrivingLineVo;
 import com.atguigu.daijia.model.vo.order.CurrentOrderInfoVo;
 import com.atguigu.daijia.model.vo.order.NewOrderDataVo;
@@ -56,9 +58,10 @@ public class OrderServiceImpl implements OrderService {
 
     //司机端获取订单信息
     @Override
-    public OrderInfoVo getOrderInfo(Long orderId, Long driverId) {
+    public OrderInfoVo getOrderInfo(Long orderId, Long customerId) {
+        System.out.println("------------orderId:"+orderId + "," + "------------driverId:"+customerId);
         OrderInfo orderInfo = orderInfoFeignClient.getOrderInfo(orderId).getData();
-        if(orderInfo.getDriverId() != driverId) {
+        if(orderInfo.getCustomerId() != customerId) {
             throw new GuiguException(ResultCodeEnum.ILLEGAL_REQUEST);
         }
         OrderInfoVo orderInfoVo = new OrderInfoVo();
@@ -73,8 +76,20 @@ public class OrderServiceImpl implements OrderService {
         return mapFeignClient.calculateDrivingLine(calculateDrivingLineForm).getData();
     }
 
+    //司机到达起始点
     @Override
     public Boolean driverArriveStartLocation(Long orderId, Long driverId) {
         return orderInfoFeignClient.driverArriveStartLocation(orderId, driverId).getData();
+    }
+
+    //更新代驾车辆信息
+    @Override
+    public Boolean updateOrderCart(UpdateOrderCartForm updateOrderCartForm) {
+        return orderInfoFeignClient.updateOrderCart(updateOrderCartForm).getData();
+    }
+
+    @Override
+    public Boolean startDrive(StartDriveForm startDriveForm) {
+        return orderInfoFeignClient.startDrive(startDriveForm).getData();
     }
 }

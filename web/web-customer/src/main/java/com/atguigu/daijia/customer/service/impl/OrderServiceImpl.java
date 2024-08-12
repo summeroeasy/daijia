@@ -164,12 +164,10 @@ public class OrderServiceImpl implements OrderService {
     //根据订单id和乘客id获取司机信息
     @Override
     public DriverInfoVo getDriverInfo(Long orderId, Long customerId) {
-        //根据订单id获取订单信息
         OrderInfo orderInfo = orderInfoFeignClient.getOrderInfo(orderId).getData();
-        if(orderInfo.getCustomerId() != customerId) {
-            throw new GuiguException(ResultCodeEnum.DATA_ERROR);
+        if (orderInfo.getCustomerId().longValue() != customerId.longValue()) {
+            throw new GuiguException(ResultCodeEnum.ILLEGAL_REQUEST);
         }
-        // TODO 跟笔记不相同
         return driverInfoFeignClient.getDriverInfoOrder(orderInfo.getDriverId()).getData();
     }
 

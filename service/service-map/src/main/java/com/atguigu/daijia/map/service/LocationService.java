@@ -1,5 +1,6 @@
 package com.atguigu.daijia.map.service;
 
+import com.atguigu.daijia.model.form.map.OrderServiceLocationForm;
 import com.atguigu.daijia.model.form.map.SearchNearByDriverForm;
 import com.atguigu.daijia.model.form.map.UpdateDriverLocationForm;
 import com.atguigu.daijia.model.form.map.UpdateOrderLocationForm;
@@ -36,4 +37,7 @@ public interface LocationService {
 
     //从redis缓存当中获取订单中司机位置
     OrderLocationVo getCacheOrderLocation(Long orderId);
+
+    //保存订单服务位置
+    Boolean saveOrderServiceLocation(List<OrderServiceLocationForm> orderLocationServiceFormList);
 }
