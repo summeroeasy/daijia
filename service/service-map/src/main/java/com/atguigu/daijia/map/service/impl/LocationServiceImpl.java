@@ -13,11 +13,16 @@ import com.atguigu.daijia.model.form.map.UpdateDriverLocationForm;
 import com.atguigu.daijia.model.form.map.UpdateOrderLocationForm;
 import com.atguigu.daijia.model.vo.map.NearByDriverVo;
 import com.atguigu.daijia.model.vo.map.OrderLocationVo;
+import com.atguigu.daijia.model.vo.map.OrderServiceLastLocationVo;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.*;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -42,6 +47,9 @@ public class LocationServiceImpl implements LocationService {
 
     @Autowired
     private OrderServiceLocationRepository orderServiceLocationRepository;
+
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
     /**
      * 开启接单服务：更新司机经纬度位置
@@ -175,5 +183,20 @@ public class LocationServiceImpl implements LocationService {
         });
         orderServiceLocationRepository.saveAll(list);
         return true;
+    }
+
+    //获取订单服务最后一个位置信息
+    @Override
+    public OrderServiceLastLocationVo getOrderServiceLastLocation(Long orderId) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("orderId").is(orderId));
+        query.with(Sort.by(Sort.Direction.DESC, "createTime"));
+        query.limit(1);
+        OrderServiceLocation orderServiceLocations = mongoTemplate.findOne(query, OrderServiceLocation.class);
+
+        //封装返回对象
+        OrderServiceLastLocationVo orderServiceLastLocationVo = new OrderServiceLastLocationVo();
+        BeanUtils.copyProperties(orderServiceLocations, orderServiceLastLocationVo);
+        return orderServiceLastLocationVo;
     }
 }
