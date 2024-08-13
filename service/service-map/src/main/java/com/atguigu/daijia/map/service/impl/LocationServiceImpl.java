@@ -190,7 +190,7 @@ public class LocationServiceImpl implements LocationService {
     public OrderServiceLastLocationVo getOrderServiceLastLocation(Long orderId) {
         Query query = new Query();
         query.addCriteria(Criteria.where("orderId").is(orderId));
-        query.with(Sort.by(Sort.Direction.DESC, "createTime"));
+        query.with(Sort.by(Sort.Order.desc("createTime")));
         query.limit(1);
         OrderServiceLocation orderServiceLocations = mongoTemplate.findOne(query, OrderServiceLocation.class);
 

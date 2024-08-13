@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -34,6 +35,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private MapFeignClient mapFeignClient;
+
+
 
     @Override
     public Integer getOrderStatus(Long orderId) {
@@ -88,6 +91,7 @@ public class OrderServiceImpl implements OrderService {
         return orderInfoFeignClient.updateOrderCart(updateOrderCartForm).getData();
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public Boolean startDrive(StartDriveForm startDriveForm) {
         return orderInfoFeignClient.startDrive(startDriveForm).getData();

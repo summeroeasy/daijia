@@ -39,7 +39,7 @@ public interface LocationService {
     //从redis缓存当中获取订单中司机位置
     OrderLocationVo getCacheOrderLocation(Long orderId);
 
-    //保存订单服务位置
+    //批量保存订单服务位置
     Boolean saveOrderServiceLocation(List<OrderServiceLocationForm> orderLocationServiceFormList);
 
     //获取订单服务最后一个位置信息

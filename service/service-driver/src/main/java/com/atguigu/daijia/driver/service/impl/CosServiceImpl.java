@@ -1,6 +1,9 @@
 package com.atguigu.daijia.driver.service.impl;
 
+import com.atguigu.daijia.common.execption.GuiguException;
+import com.atguigu.daijia.common.result.ResultCodeEnum;
 import com.atguigu.daijia.driver.config.TencentCloudProperties;
+import com.atguigu.daijia.driver.service.CiService;
 import com.atguigu.daijia.driver.service.CosService;
 import com.atguigu.daijia.model.vo.driver.CosUploadVo;
 import com.qcloud.cos.COSClient;
@@ -9,7 +12,6 @@ import com.qcloud.cos.auth.BasicCOSCredentials;
 import com.qcloud.cos.http.HttpMethodName;
 import com.qcloud.cos.http.HttpProtocol;
 import com.qcloud.cos.model.*;
-
 import com.qcloud.cos.region.Region;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
@@ -29,6 +31,9 @@ public class CosServiceImpl implements CosService {
 
     @Autowired
     private TencentCloudProperties tencentCloudProperties;
+
+    @Autowired
+    private CiService cisService;
 
     @Override
     public CosUploadVo upload(MultipartFile file, String path) {
@@ -61,6 +66,14 @@ public class CosServiceImpl implements CosService {
         putObjectRequest.setStorageClass(StorageClass.Standard);
         PutObjectResult putObjectResult = cosClient.putObject(putObjectRequest); //上传文件
         cosClient.shutdown();
+
+        //图片审核
+        Boolean imageAuditing = cisService.imageAuditing(uploadPath);
+        if(!imageAuditing) {
+            //删除违规图片
+            cosClient.deleteObject(tencentCloudProperties.getBucketPrivate(),uploadPath);
+            throw new GuiguException(ResultCodeEnum.IMAGE_AUDITION_FAIL);
+        }
 
         //返回vo对象
         CosUploadVo cosUploadVo = new CosUploadVo();
