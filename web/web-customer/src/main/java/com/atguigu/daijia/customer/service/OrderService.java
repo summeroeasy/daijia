@@ -64,4 +64,7 @@ public interface OrderService {
 
     //创建微信支付订单
     WxPrepayVo createWxPayment(CreateWxPaymentForm createWxPaymentForm);
+
+    //查询微信支付订单状态
+    Boolean queryPayStatus(String orderNo);
 }

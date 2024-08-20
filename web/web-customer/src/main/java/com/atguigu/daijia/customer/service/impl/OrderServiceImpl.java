@@ -252,4 +252,17 @@ public class OrderServiceImpl implements OrderService {
 
         return wxPrepayVo;
     }
+
+
+    /**
+     * 通过调用微信支付接口，查询指定订单号的支付状态
+     * 此方法使用Feign客户端进行远程调用，避免了手动组装HTTP请求和处理响应
+     *
+     * @param orderNo 订单号，用于标识需要查询支付状态的订单
+     * @return Boolean 返回订单的支付状态，true表示已支付，false表示未支付
+     */
+    @Override
+    public Boolean queryPayStatus(String orderNo) {
+        return wxPayFeignClient.queryPayStatus(orderNo).getData();
+    }
 }

@@ -122,5 +122,19 @@ public class OrderController {
         // 调用orderService的createWxPayment方法创建微信支付订单，并将返回结果封装在Result对象中返回
         return Result.ok(orderService.createWxPayment(createWxPaymentForm));
     }
+
+    /**
+     * 查询支付状态
+     * 通过订单号查询支付状态，需要用户登录状态
+     *
+     * @param orderNo 订单号，用于查询支付状态
+     * @return 包含支付状态的Result对象，支付成功返回true，否则返回false
+     */
+    @Operation(summary = "支付状态查询")
+    @GuiguLogin
+    @GetMapping("/queryPayStatus/{orderNo}")
+    public Result<Boolean> queryPayStatus(@PathVariable String orderNo) {
+        return Result.ok(orderService.queryPayStatus(orderNo));
+    }
 }
 

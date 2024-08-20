@@ -12,6 +12,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.wechat.pay.java.core.RSAAutoCertificateConfig;
 import com.wechat.pay.java.service.payments.jsapi.JsapiServiceExtension;
 import com.wechat.pay.java.service.payments.jsapi.model.*;
+import com.wechat.pay.java.service.payments.model.Transaction;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +41,7 @@ public class WxPayServiceImpl implements WxPayService {
             LambdaQueryWrapper<PaymentInfo> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(PaymentInfo::getOrderNo, paymentInfoForm.getOrderNo());
             PaymentInfo paymentInfo = paymentInfoMapper.selectOne(queryWrapper);
-            if (paymentInfo == null){
+            if (paymentInfo == null) {
                 paymentInfo = new PaymentInfo();
                 BeanUtils.copyProperties(paymentInfoForm, paymentInfo);
                 paymentInfo.setPaymentStatus(0);
@@ -53,7 +54,7 @@ public class WxPayServiceImpl implements WxPayService {
                     .build();
 
             //3 创建request对象，封装微信对象使用参数
-            PrepayRequest request =  new PrepayRequest();
+            PrepayRequest request = new PrepayRequest();
             Amount amount = new Amount();
             amount.setTotal(paymentInfoForm.getAmount().multiply(new BigDecimal(100)).intValue());
             request.setAmount(amount);
@@ -61,7 +62,7 @@ public class WxPayServiceImpl implements WxPayService {
             request.setMchid(wxPayV3Properties.getMerchantId());
             //string[1,127]
             String description = paymentInfo.getContent();
-            if(description.length() > 127) {
+            if (description.length() > 127) {
                 description = description.substring(0, 127);
             }
             request.setDescription(description);
@@ -87,4 +88,37 @@ public class WxPayServiceImpl implements WxPayService {
             throw new GuiguException(ResultCodeEnum.DATA_ERROR);
         }
     }
+
+    @Override
+    public Object queryPayStatus(String orderNo) {
+        //1 创建微信支付使用对象
+        JsapiServiceExtension service = new JsapiServiceExtension.Builder()
+                .config(rsaAutoCertificateConfig)
+                .build();
+
+        //2 封装查询支付状态需要参数
+        QueryOrderByOutTradeNoRequest queryRequest = new QueryOrderByOutTradeNoRequest();
+        queryRequest.setMchid(wxPayV3Properties.getMerchantId());
+        queryRequest.setOutTradeNo(orderNo);
+
+        //3 调用微信操作对象里面的方法实现查询操作
+        Transaction transaction = service.queryOrderByOutTradeNo(queryRequest);
+
+        //4 查询返回结果，根据结果判断
+        if (transaction != null
+                && transaction.getTradeState() == Transaction.TradeStateEnum.SUCCESS) {
+            //5 如果支付成功，调用其他方法实现支付后处理逻辑
+            this.handlePayment(transaction);
+
+            return true;
+        }
+        return false;
+    }
+
+    //如果支付成功，调用其他方法实现支付后处理逻辑
+    private void handlePayment(Transaction transaction) {
+
+    }
+
+
 }

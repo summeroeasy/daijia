@@ -12,4 +12,7 @@ public interface WxPayService {
      * @return
      */
     WxPrepayVo createWxPayment(PaymentInfoForm paymentInfoForm);
+
+
+    Object queryPayStatus(String orderNo);
 }
