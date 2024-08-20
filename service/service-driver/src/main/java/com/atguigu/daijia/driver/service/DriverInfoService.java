@@ -73,4 +73,7 @@ public interface DriverInfoService extends IService<DriverInfo> {
 
     //获取代驾基本信息
     DriverInfoVo getDriverInfoOrder(Long driverId);
+
+    //获取代驾微信openId
+    String getDriverOpenId(Long driverId);
 }

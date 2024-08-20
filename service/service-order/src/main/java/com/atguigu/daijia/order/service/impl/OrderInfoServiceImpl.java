@@ -10,10 +10,7 @@ import com.atguigu.daijia.model.form.order.StartDriveForm;
 import com.atguigu.daijia.model.form.order.UpdateOrderBillForm;
 import com.atguigu.daijia.model.form.order.UpdateOrderCartForm;
 import com.atguigu.daijia.model.vo.base.PageVo;
-import com.atguigu.daijia.model.vo.order.CurrentOrderInfoVo;
-import com.atguigu.daijia.model.vo.order.OrderBillVo;
-import com.atguigu.daijia.model.vo.order.OrderListVo;
-import com.atguigu.daijia.model.vo.order.OrderProfitsharingVo;
+import com.atguigu.daijia.model.vo.order.*;
 import com.atguigu.daijia.order.mapper.OrderBillMapper;
 import com.atguigu.daijia.order.mapper.OrderInfoMapper;
 import com.atguigu.daijia.order.mapper.OrderProfitsharingMapper;
@@ -426,7 +423,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     @Override
     public PageVo findCustomerOrderPage(Page<OrderInfo> pageParam, Long customerId) {
         IPage<OrderListVo> pageInfo = orderInfoMapper.selectCustomerOrderPage(pageParam, customerId);
-        return new PageVo<>(pageInfo.getRecords(),pageInfo.getPages(),pageInfo.getTotal());
+        return new PageVo<>(pageInfo.getRecords(), pageInfo.getPages(), pageInfo.getTotal());
     }
 
     /**
@@ -435,58 +432,69 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
      * 它利用分页参数来控制返回的订单信息的数量和起始位置，以提高数据处理的效率和用户体验
      *
      * @param pageParam 分页参数对象，用于控制查询的分页行为，如当前页码和每页数量
-     * @param driverId 司机的ID，用于定位特定司机的订单信息
+     * @param driverId  司机的ID，用于定位特定司机的订单信息
      * @return 返回一个PageVo对象，包含按分页查询到的订单信息，或者在特定情况下返回null
      */
     @Override
     public PageVo findDriverOrderPage(Page<OrderInfo> pageParam, Long driverId) {
-        IPage<OrderListVo> pageInfo =  orderInfoMapper.selectDriverOrderPage(pageParam,driverId);
-        return new PageVo<>(pageInfo.getRecords(),pageInfo.getPages(),pageInfo.getTotal());
+        IPage<OrderListVo> pageInfo = orderInfoMapper.selectDriverOrderPage(pageParam, driverId);
+        return new PageVo<>(pageInfo.getRecords(), pageInfo.getPages(), pageInfo.getTotal());
     }
 
     /**
      * 获取订单账单信息
+     *
      * @param orderId
      * @return
      */
     @Override
     public OrderBillVo getOrderBillInfo(Long orderId) {
         LambdaQueryWrapper<OrderBill> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(OrderBill::getOrderId,orderId);
+        wrapper.eq(OrderBill::getOrderId, orderId);
         OrderBill orderBill = orderBillMapper.selectOne(wrapper);
-        if (orderBill == null){
+        if (orderBill == null) {
             throw new GuiguException(ResultCodeEnum.DATA_ERROR);
         }
         OrderBillVo orderBillVo = new OrderBillVo();
-        BeanUtils.copyProperties(orderBill,orderBillVo);
+        BeanUtils.copyProperties(orderBill, orderBillVo);
         return orderBillVo;
     }
 
     @Override
     public OrderProfitsharingVo getOrderProfitsharing(Long orderId) {
         LambdaQueryWrapper<OrderProfitsharing> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(OrderProfitsharing::getOrderId,orderId);
+        wrapper.eq(OrderProfitsharing::getOrderId, orderId);
         OrderProfitsharing orderProfitsharing = orderProfitsharingMapper.selectOne(wrapper);
 
         OrderProfitsharingVo orderProfitsharingVo = new OrderProfitsharingVo();
-        BeanUtils.copyProperties(orderProfitsharing,orderProfitsharingVo);
+        BeanUtils.copyProperties(orderProfitsharing, orderProfitsharingVo);
         return orderProfitsharingVo;
     }
 
     @Override
     public Boolean sendOrderBillInfo(Long orderId, Long driverId) {
         LambdaQueryWrapper<OrderInfo> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(OrderInfo::getId,orderId);
-        wrapper.eq(OrderInfo::getDriverId,driverId);
+        wrapper.eq(OrderInfo::getId, orderId);
+        wrapper.eq(OrderInfo::getDriverId, driverId);
 
         //更新字段
         OrderInfo updateOrderInfo = new OrderInfo();
         updateOrderInfo.setStatus(OrderStatus.UNPAID.getStatus());
         int row = orderInfoMapper.update(updateOrderInfo, wrapper);
-        if(row == 1) {
+        if (row == 1) {
             return true;
         } else {
             throw new GuiguException(ResultCodeEnum.UPDATE_ERROR);
         }
+    }
+
+    @Override
+    public OrderPayVo getOrderPayVo(String orderNo, Long customerId) {
+        OrderPayVo orderPayVo = orderInfoMapper.selectOrderPayVo(orderNo, customerId);
+        if(null != orderPayVo) {
+            String content = orderPayVo.getStartLocation() + " 到 " + orderPayVo.getEndLocation();
+            orderPayVo.setContent(content);
+        }
+        return orderPayVo;
     }
 }

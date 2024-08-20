@@ -374,4 +374,11 @@ public class DriverInfoServiceImpl extends ServiceImpl<DriverInfoMapper, DriverI
         driverInfoVo.setDriverLicenseAge(currentYear - firstYear);
         return driverInfoVo;
     }
+
+    @Override
+    public String getDriverOpenId(Long driverId) {
+        LambdaQueryWrapper<DriverInfo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DriverInfo::getId,driverId);
+        return driverInfoMapper.selectOne(wrapper).getWxOpenId();
+    }
 }

@@ -3,15 +3,12 @@ package com.atguigu.daijia.customer.service.impl;
 import cn.binarywang.wx.miniapp.api.WxMaService;
 import cn.binarywang.wx.miniapp.bean.WxMaJscode2SessionResult;
 import cn.binarywang.wx.miniapp.bean.WxMaPhoneNumberInfo;
-import com.atguigu.daijia.common.execption.GuiguException;
-import com.atguigu.daijia.common.result.ResultCodeEnum;
 import com.atguigu.daijia.customer.mapper.CustomerInfoMapper;
 import com.atguigu.daijia.customer.mapper.CustomerLoginLogMapper;
 import com.atguigu.daijia.customer.service.CustomerInfoService;
 import com.atguigu.daijia.model.entity.customer.CustomerInfo;
 import com.atguigu.daijia.model.entity.customer.CustomerLoginLog;
 import com.atguigu.daijia.model.form.customer.UpdateWxPhoneForm;
-import com.atguigu.daijia.model.vo.customer.CustomerInfoVo;
 import com.atguigu.daijia.model.vo.customer.CustomerLoginVo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -113,5 +110,24 @@ public class CustomerInfoServiceImpl extends ServiceImpl<CustomerInfoMapper, Cus
         customerInfo.setId(updateWxPhoneForm.getCustomerId());
         customerInfo.setPhone(phoneNumber);
         return this.updateById(customerInfo);
+    }
+
+
+    /**
+     * 根据客户ID获取微信OpenID
+     * 该方法通过查询数据库中的客户信息表，找到对应客户ID的记录，并返回该记录关联的微信OpenID
+     * 使用Lambda查询方式提高了代码的可读性和安全性
+     *
+     * @param customerId 客户ID，用于定位特定的客户信息
+     * @return 客户的微信OpenID，如果找不到对应客户ID的信息，可能返回null
+     */
+    @Override
+    public String getCustomerOpenId(Long customerId) {
+        // 创建Lambda风格的查询包装器，用于构建查询条件
+        LambdaQueryWrapper<CustomerInfo> queryWrapper = new LambdaQueryWrapper<>();
+        // 设置查询条件，查找ID与参数中customerId相等的客户信息
+        queryWrapper.eq(CustomerInfo::getId, customerId);
+        // 执行查询并获取第一条记录的微信OpenID
+        return customerInfoMapper.selectOne(queryWrapper).getWxOpenId();
     }
 }
