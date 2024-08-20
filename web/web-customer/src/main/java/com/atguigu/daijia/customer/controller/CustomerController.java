@@ -4,9 +4,12 @@ import com.atguigu.daijia.common.login.GuiguLogin;
 import com.atguigu.daijia.common.result.Result;
 import com.atguigu.daijia.common.util.AuthContextHolder;
 import com.atguigu.daijia.customer.service.CustomerService;
+import com.atguigu.daijia.customer.service.OrderService;
 import com.atguigu.daijia.model.form.customer.UpdateWxPhoneForm;
+import com.atguigu.daijia.model.vo.base.PageVo;
 import com.atguigu.daijia.model.vo.customer.CustomerLoginVo;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +24,9 @@ public class CustomerController {
 
     @Autowired
     private CustomerService customerInfoService;
+
+    @Autowired
+    private OrderService orderService;
 
     @Operation(summary = "小程序授权登录")
     @GetMapping("/login/{code}")
@@ -73,6 +79,23 @@ public class CustomerController {
         //个人版没有获取手机号权限
         //return Result.ok(customerInfoService.updateWxPhoneNumber(updateWxPhoneForm));
         return Result.ok(true);
+    }
+
+    // 获取乘客订单分页列表的接口
+    // 使用了GuiguLogin注解，表示需要用户登录后才能访问此接口
+    // 接口的请求方式为GET，路径为/findCustomerOrderPage/{page}/{limit}
+    @GetMapping("findCustomerOrderPage/{page}/{limit}")
+    public Result<PageVo> findCustomerOrderPage(
+            // 当前页码，作为路径变量传入
+            @PathVariable Long page,
+            // 每页记录数，作为路径变量传入
+            @PathVariable Long limit) {
+        // 从认证令牌中获取当前用户ID
+        Long customerId = AuthContextHolder.getUserId();
+        // 调用订单服务的findCustomerOrderPage方法，传入用户ID、当前页码和每页记录数，获取分页订单信息
+        PageVo pageVo = orderService.findCustomerOrderPage(customerId, page, limit);
+        // 返回成功结果，携带分页订单信息
+        return Result.ok(pageVo);
     }
 }
 
