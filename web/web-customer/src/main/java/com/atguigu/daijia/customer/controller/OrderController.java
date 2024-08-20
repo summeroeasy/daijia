@@ -7,6 +7,7 @@ import com.atguigu.daijia.customer.service.OrderService;
 import com.atguigu.daijia.model.form.customer.ExpectOrderForm;
 import com.atguigu.daijia.model.form.customer.SubmitOrderForm;
 import com.atguigu.daijia.model.form.map.CalculateDrivingLineForm;
+import com.atguigu.daijia.model.form.payment.CreateWxPaymentForm;
 import com.atguigu.daijia.model.vo.customer.ExpectOrderVo;
 import com.atguigu.daijia.model.vo.driver.DriverInfoVo;
 import com.atguigu.daijia.model.vo.map.DrivingLineVo;
@@ -14,6 +15,7 @@ import com.atguigu.daijia.model.vo.map.OrderLocationVo;
 import com.atguigu.daijia.model.vo.map.OrderServiceLastLocationVo;
 import com.atguigu.daijia.model.vo.order.CurrentOrderInfoVo;
 import com.atguigu.daijia.model.vo.order.OrderInfoVo;
+import com.atguigu.daijia.model.vo.payment.WxPrepayVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -95,6 +97,30 @@ public class OrderController {
     @GetMapping("/getOrderServiceLastLocation/{orderId}")
     public Result<OrderServiceLastLocationVo> getOrderServiceLastLocation(@PathVariable Long orderId) {
         return Result.ok(orderService.getOrderServiceLastLocation(orderId));
+    }
+
+    /**
+     * 创建微信支付
+     *
+     * 本接口用于初始化微信支付订单在微信支付平台的创建本接口通过Post请求接收创建微信支付订单所需的信息，
+     * 并返回微信支付的预支付交易会话标识（Prepay_id），该标识用于后续的微信支付操作
+     *
+     * 注意：本接口需要用户处于登录状态，以便从上下文中获取当前用户的ID作为支付订单的客户ID
+     *
+     * @param createWxPaymentForm 包含创建微信支付订单所需信息的表单对象
+     * @return 包含微信支付预支付交易会话标识的Result对象如果操作成功，Result对象的状态码将为200，
+     *         并包含一个WxPrepayVo对象，其中包含预支付_id_如果操作失败，Result对象将包含相应的错误码和信息
+     */
+    @Operation(summary = "创建微信支付")
+    @GuiguLogin
+    @PostMapping("/createWxPayment")
+    public Result<WxPrepayVo> createWxPayment(@RequestBody CreateWxPaymentForm createWxPaymentForm) {
+        // 从安全上下文中获取当前用户的ID作为客户ID
+        Long customerId = AuthContextHolder.getUserId();
+        // 将获取到的客户ID设置到表单对象中，以便在创建支付订单时使用
+        createWxPaymentForm.setCustomerId(customerId);
+        // 调用orderService的createWxPayment方法创建微信支付订单，并将返回结果封装在Result对象中返回
+        return Result.ok(orderService.createWxPayment(createWxPaymentForm));
     }
 }
 
