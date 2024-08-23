@@ -2,6 +2,7 @@ package com.atguigu.daijia.payment.service;
 
 import com.atguigu.daijia.model.form.payment.PaymentInfoForm;
 import com.atguigu.daijia.model.vo.payment.WxPrepayVo;
+import jakarta.servlet.http.HttpServletRequest;
 
 public interface WxPayService {
 
@@ -15,4 +16,9 @@ public interface WxPayService {
 
 
     Object queryPayStatus(String orderNo);
+
+
+    void wxnotify(HttpServletRequest request);
+
+    void handleOrder(String orderNo);
 }

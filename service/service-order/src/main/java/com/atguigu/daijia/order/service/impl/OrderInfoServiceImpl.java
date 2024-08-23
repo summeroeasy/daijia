@@ -21,6 +21,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.redisson.api.RBlockingDeque;
+import org.redisson.api.RDelayedQueue;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
@@ -79,6 +81,9 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         orderInfo.setStatus(OrderStatus.WAITING_ACCEPT.getStatus());
         orderInfoMapper.insert(orderInfo);
 
+        //生成订单之后，发送延迟消息
+        this.sendDelayMessage(orderInfo.getId());
+
         //记录日志
         this.log(orderInfo.getId(), OrderStatus.WAITING_ACCEPT.getStatus());
 
@@ -92,6 +97,23 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
                         TimeUnit.MINUTES);
 
         return orderInfo.getId();
+    }
+
+    // 生成订单之后，发送延迟消息
+    private void sendDelayMessage(Long orderId) {
+        try {
+            //1 创建队列
+            RBlockingDeque<Object> blockingDeque = redissonClient.getBlockingDeque("queue_cancel");
+            //2 把创建的队列放到延迟队列里面
+            RDelayedQueue<Object> delayedQueue = redissonClient.getDelayedQueue(blockingDeque);
+            //3 发送消息到延迟队列里面
+            //设置过期时间
+            delayedQueue.offer(orderId.toString(), 15, TimeUnit.MINUTES);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new GuiguException(ResultCodeEnum.SERVICE_ERROR);
+        }
+
     }
 
     /**
@@ -491,10 +513,76 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     @Override
     public OrderPayVo getOrderPayVo(String orderNo, Long customerId) {
         OrderPayVo orderPayVo = orderInfoMapper.selectOrderPayVo(orderNo, customerId);
-        if(null != orderPayVo) {
+        if (null != orderPayVo) {
             String content = orderPayVo.getStartLocation() + " 到 " + orderPayVo.getEndLocation();
             orderPayVo.setContent(content);
         }
         return orderPayVo;
+    }
+
+    @Override
+    public Boolean updateOrderPayStatus(String orderNo) {
+        //1 根据订单编号查询，判断订单状态
+        LambdaQueryWrapper<OrderInfo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(OrderInfo::getOrderNo, orderNo);
+        OrderInfo orderInfo = orderInfoMapper.selectOne(wrapper);
+        if (orderInfo == null || orderInfo.getStatus() == OrderStatus.PAID.getStatus()) {
+            return true;
+        }
+
+        //2 更新状态
+        LambdaQueryWrapper<OrderInfo> updateWrapper = new LambdaQueryWrapper<>();
+        updateWrapper.eq(OrderInfo::getOrderNo, orderNo);
+
+        OrderInfo updateOrderInfo = new OrderInfo();
+        updateOrderInfo.setStatus(OrderStatus.PAID.getStatus());
+        updateOrderInfo.setPayTime(new Date());
+
+        int rows = orderInfoMapper.update(updateOrderInfo, updateWrapper);
+
+        if (rows == 1) {
+            return true;
+        } else {
+            throw new GuiguException(ResultCodeEnum.UPDATE_ERROR);
+        }
+    }
+
+    @Override
+    public OrderRewardVo getOrderRewardFee(String orderNo) {
+        //根据订单编号查询订单表
+        LambdaQueryWrapper<OrderInfo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(OrderInfo::getOrderNo, orderNo);
+        wrapper.select(OrderInfo::getId, OrderInfo::getDriverId);
+        OrderInfo orderInfo = orderInfoMapper.selectOne(wrapper);
+
+        //根据订单ID查询系统奖励表
+        LambdaQueryWrapper<OrderBill> orderBillLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        orderBillLambdaQueryWrapper.eq(OrderBill::getOrderId, orderInfo.getId());
+        orderBillLambdaQueryWrapper.select(OrderBill::getRewardFee);
+        OrderBill orderBill = orderBillMapper.selectOne(orderBillLambdaQueryWrapper);
+
+        //封装到VO里面
+        OrderRewardVo orderRewardVo = new OrderRewardVo();
+        orderRewardVo.setDriverId(orderInfo.getDriverId());
+        orderRewardVo.setOrderId(orderInfo.getId());
+        orderRewardVo.setRewardFee(orderBill.getRewardFee());
+        return orderRewardVo;
+    }
+
+    @Override
+    public void orderCancel(long orderId) {
+        //1 根据订单ID查询订单信息
+        OrderInfo orderInfo = orderInfoMapper.selectById(orderId);
+
+        //判断
+        if (orderInfo.getStatus() == OrderStatus.WAITING_ACCEPT.getStatus()) {
+           //修改订单状态，取消状态
+            orderInfo.setStatus(OrderStatus.CANCEL_ORDER.getStatus());
+            int row = orderInfoMapper.updateById(orderInfo);
+            if(row == 1) {
+                //删除接单标识
+                redisTemplate.delete(RedisConstant.ORDER_ACCEPT_MARK);
+            }
+        }
     }
 }

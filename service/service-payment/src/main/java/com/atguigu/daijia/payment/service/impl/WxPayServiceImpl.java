@@ -1,24 +1,38 @@
 package com.atguigu.daijia.payment.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.atguigu.daijia.common.constant.MqConst;
 import com.atguigu.daijia.common.execption.GuiguException;
 import com.atguigu.daijia.common.result.ResultCodeEnum;
+import com.atguigu.daijia.common.service.RabbitService;
+import com.atguigu.daijia.common.util.RequestUtils;
+import com.atguigu.daijia.driver.client.DriverAccountFeignClient;
 import com.atguigu.daijia.model.entity.payment.PaymentInfo;
+import com.atguigu.daijia.model.enums.TradeType;
+import com.atguigu.daijia.model.form.driver.TransferForm;
 import com.atguigu.daijia.model.form.payment.PaymentInfoForm;
+import com.atguigu.daijia.model.vo.order.OrderRewardVo;
 import com.atguigu.daijia.model.vo.payment.WxPrepayVo;
+import com.atguigu.daijia.order.client.OrderInfoFeignClient;
 import com.atguigu.daijia.payment.config.WxPayV3Properties;
 import com.atguigu.daijia.payment.mapper.PaymentInfoMapper;
 import com.atguigu.daijia.payment.service.WxPayService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.wechat.pay.java.core.RSAAutoCertificateConfig;
+import com.wechat.pay.java.core.notification.NotificationParser;
+import com.wechat.pay.java.core.notification.RequestParam;
 import com.wechat.pay.java.service.payments.jsapi.JsapiServiceExtension;
 import com.wechat.pay.java.service.payments.jsapi.model.*;
 import com.wechat.pay.java.service.payments.model.Transaction;
+import io.seata.spring.annotation.GlobalTransactional;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 @Service
 @Slf4j
@@ -32,6 +46,15 @@ public class WxPayServiceImpl implements WxPayService {
 
     @Autowired
     private WxPayV3Properties wxPayV3Properties;
+
+    @Autowired
+    private RabbitService rabbitService;
+
+    @Autowired
+    private OrderInfoFeignClient orderInfoFeignClient;
+
+    @Autowired
+    private DriverAccountFeignClient driverAccountFeignClient;
 
     @Override
     public WxPrepayVo createWxPayment(PaymentInfoForm paymentInfoForm) {
@@ -115,9 +138,90 @@ public class WxPayServiceImpl implements WxPayService {
         return false;
     }
 
-    //如果支付成功，调用其他方法实现支付后处理逻辑
-    private void handlePayment(Transaction transaction) {
+    //微信支付成功后，进行回调
+    @Override
+    public void wxnotify(HttpServletRequest request) {
+        //1 回调通知的验证与解密
+        // 从request头信息获取参数
+        //HTTP 头 Wechatpay-Signature
+        // HTTP 头 Wechatpay-Nonce
+        //HTTP 头 Wechatpay-Timestamp
+        //HTTP 头 Wechatpay-Serial
+        //HTTP 头 Wechatpay-Signature-Type
+        //HTTP 请求体 body。切记使用原始报文，不要用 JSON 对象序列化后的字符串，避免验签的 body 和原文不一致。
+        String wechatPaySerial = request.getHeader("Wechatpay-Serial");
+        String nonce = request.getHeader("Wechatpay-Nonce");
+        String timestamp = request.getHeader("Wechatpay-Timestamp");
+        String signature = request.getHeader("Wechatpay-Signature");
+        String requestBody = RequestUtils.readData(request);
 
+        //2 构造 RequestParam 对象
+        RequestParam requestParam = new RequestParam.Builder()
+                .serialNumber(wechatPaySerial)
+                .nonce(nonce)
+                .timestamp(timestamp)
+                .body(requestBody)
+                .signature(signature)
+                .build();
+
+        //3 初始化 NotificationParser
+        NotificationParser parser = new NotificationParser(rsaAutoCertificateConfig);
+
+        //4 以支付通知回调为例，验签、解密并转换为 Transaction 对象
+        Transaction transaction = parser.parse(requestParam, Transaction.class);
+
+        if(null != transaction && transaction.getTradeState() == Transaction.TradeStateEnum.SUCCESS) {
+            //5.处理支付业务
+            this.handlePayment(transaction);
+        }
+    }
+
+    @Override
+    @GlobalTransactional
+    public void handleOrder(String orderNo) {
+        //1 远程调用：更新订单状态：已支付
+        orderInfoFeignClient.updateOrderPayStatus(orderNo);
+
+        //2 远程调用：获取系统奖励，打入司机账户
+        OrderRewardVo orderRewardVo = orderInfoFeignClient.getOrderRewardFee(orderNo).getData();
+        if (orderRewardVo != null && orderRewardVo.getRewardFee().doubleValue() > 0){
+            TransferForm transferForm = new TransferForm();
+            transferForm.setTradeNo(orderNo);
+            transferForm.setTradeType(TradeType.REWARD.getType());
+            transferForm.setContent(TradeType.REWARD.getContent());
+            transferForm.setAmount(orderRewardVo.getRewardFee());
+            transferForm.setDriverId(orderRewardVo.getDriverId());
+            //3 调用远程接口实现打款
+            driverAccountFeignClient.transfer(transferForm);
+        }
+        //3 TODO 其他
+    }
+
+    //如果支付成功，调用其他方法实现支付后处理逻辑,大傻逼
+    public void handlePayment(Transaction transaction) {
+        //1 更新支付记录，修改为已支付
+        // 获取订单编号
+        String orderNo = transaction.getOutTradeNo();
+        PaymentInfo paymentInfo = paymentInfoMapper.selectOne(new LambdaQueryWrapper<PaymentInfo>()
+                .eq(PaymentInfo::getOrderNo, orderNo));
+
+        //如果已经支付，不需要更新
+        if(paymentInfo.getPaymentStatus() == 1) {
+            return;
+        }
+
+        paymentInfo.setPaymentStatus(1);
+        paymentInfo.setOrderNo(transaction.getOutTradeNo());
+        paymentInfo.setTransactionId(transaction.getTransactionId());
+        paymentInfo.setCallbackTime(new Date());
+        paymentInfo.setCallbackContent(JSON.toJSONString(transaction));
+        paymentInfoMapper.updateById(paymentInfo);
+
+        //2 发送端：发送mq消息，传递订单编号
+        //  接收端：获取订单编号，完成后续处理
+        rabbitService.sendMessage(MqConst.EXCHANGE_ORDER,
+                MqConst.QUEUE_PAY_SUCCESS,
+                orderNo);
     }
 
 

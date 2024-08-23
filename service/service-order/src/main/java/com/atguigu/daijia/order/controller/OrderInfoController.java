@@ -7,10 +7,7 @@ import com.atguigu.daijia.model.form.order.StartDriveForm;
 import com.atguigu.daijia.model.form.order.UpdateOrderBillForm;
 import com.atguigu.daijia.model.form.order.UpdateOrderCartForm;
 import com.atguigu.daijia.model.vo.base.PageVo;
-import com.atguigu.daijia.model.vo.order.CurrentOrderInfoVo;
-import com.atguigu.daijia.model.vo.order.OrderBillVo;
-import com.atguigu.daijia.model.vo.order.OrderPayVo;
-import com.atguigu.daijia.model.vo.order.OrderProfitsharingVo;
+import com.atguigu.daijia.model.vo.order.*;
 import com.atguigu.daijia.order.service.OrderInfoService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
@@ -152,6 +149,24 @@ public class OrderInfoController {
     @GetMapping("/getOrderPayVo/{orderNo}/{customerId}")
     public Result<OrderPayVo> getOrderPayVo(@PathVariable String orderNo, @PathVariable Long customerId) {
         return Result.ok(orderInfoService.getOrderPayVo(orderNo, customerId));
+    }
+
+    /**
+     * 使用GET方法更新订单支付状态
+     *
+     * @param orderNo 订单编号
+     * @return 操作结果，包含一个布尔值，表示更新支付状态是否成功
+     */
+    @Operation(summary = "更改订单支付状态")
+    @GetMapping("/updateOrderPayStatus/{orderNo}")
+    public Result<Boolean> updateOrderPayStatus(@PathVariable String orderNo) {
+        return Result.ok(orderInfoService.updateOrderPayStatus(orderNo));
+    }
+
+    @Operation(summary = "获取订单的系统奖励")
+    @GetMapping("/getOrderRewardFee/{orderNo}")
+    public Result<OrderRewardVo> getOrderRewardFee(@PathVariable String orderNo) {
+        return Result.ok(orderInfoService.getOrderRewardFee(orderNo));
     }
 }
 
